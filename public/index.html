@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Checker</title>
+    <style>
+      /* (Your existing CSS is great, no changes) */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background-color: #f4f7f6;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+      #chat-container {
+        width: 400px;
+        max-width: 90%;
+        height: 600px;
+        border: 1px solid #d1d1d1;
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+      }
+      #chat-window {
+        flex-grow: 1;
+        padding: 16px;
+        overflow-y: auto;
+        border-bottom: 1px solid #eee;
+      }
+      .message {
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border-radius: 18px;
+        max-width: 75%;
+        line-height: 1.4;
+        white-space: pre-wrap; /* Added to respect newlines from AI */
+      }
+      .message.user {
+        background-color: #007aff;
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+      }
+      .message.ai {
+        background-color: #e5e5ea;
+        color: black;
+        margin-right: auto;
+        border-bottom-left-radius: 4px;
+      }
+      .message.loading {
+        background-color: #e5e5ea;
+        color: #777;
+        font-style: italic;
+        margin-right: auto;
+        border-bottom-left-radius: 4px;
+      }
+      #chat-input-area {
+        display: flex;
+        padding: 16px;
+      }
+      #chat-input {
+        flex-grow: 1;
+        border: 1px solid #ccc;
+        border-radius: 18px;
+        padding: 10px 16px;
+        font-size: 16px;
+        outline: none;
+      }
+      #chat-input:focus {
+        border-color: #007aff;
+      }
+      #send-button {
+        margin-left: 8px;
+        border: none;
+        background-color: #007aff;
+        color: white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chat-container">
+      <div id="chat-window"></div>
+      <div id="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Type a message..." />
+        <button id="send-button">→</button>
+      </div>
+    </div>
+
+    <script>
+      // --- STATE ---
+      let sessionId = null;
+
+      // --- DOM Elements ---
+      const chatWindow = document.getElementById("chat-window");
+      const chatInput = document.getElementById("chat-input");
+      const sendButton = document.getElementById("send-button");
+
+      // --- Helper Functions ---
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      function addMessage(role, text) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", role);
+        messageDiv.textContent = text;
+        chatWindow.appendChild(messageDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        return messageDiv;
+      }
+
+      // --- Main Chat Logic ---
+
+      // 1. Initialize the Chat
+      async function initializeChat() {
+        try {
+          const response = await fetch("/create-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ metadata: { frontendUser: true } }),
+          });
+
+          const data = await response.json();
+
+          if (data.data && data.data.id) {
+            sessionId = data.data.id;
+            addMessage(
+              "ai",
+              "Hi there! I am your AI health assistant. How can I help you today?"
+            );
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+          } else {
+            addMessage(
+              "ai",
+              "Error: Could not start a session. Please refresh."
+            );
+          }
+        } catch (error) {
+          console.error("Session creation failed:", error);
+          addMessage("ai", "Error: Server connection failed. Please refresh.");
+        }
+      }
+
+      // 2. Send a Message (NEW FLOW)
+      async function handleSendMessage() {
+        const message = chatInput.value.trim();
+        if (!message || !sessionId) return;
+
+        addMessage("user", message);
+        chatInput.value = "";
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+        const loadingMessage = addMessage("loading", "...");
+
+        try {
+          // Step 1: Send message and create task (NEW ENDPOINT)
+          const taskResponse = await fetch("/send-and-process", {
+            // <-- THIS IS THE CHANGE
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: sessionId, message: message }),
+          });
+
+          // --- NEW ERROR HANDLING ---
+          if (!taskResponse.ok) {
+            const errorData = await taskResponse.json();
+            throw new Error(errorData.message || "Failed to send message");
+          }
+          // --- END NEW ERROR HANDLING ---
+
+          const taskData = await taskResponse.json();
+          if (!taskData.data || !taskData.data.id) {
+            throw new Error("Task created, but no ID returned");
+          }
+          const taskId = taskData.data.id;
+
+          // Step 2: Poll for the task result (this is unchanged)
+          await pollForResult(sessionId, taskId, loadingMessage);
+        } catch (error) {
+          console.error("Chat error:", error);
+          loadingMessage.classList.remove("loading");
+          loadingMessage.classList.add("ai");
+          // This will now show the REAL error
+          loadingMessage.textContent = `Error: ${error.message}`;
+        }
+
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+        chatInput.focus();
+      }
+
+      // 3. Polling Function (Unchanged, but error logging improved)
+      async function pollForResult(sessionId, taskId, loadingMessage) {
+        let taskComplete = false;
+
+        while (!taskComplete) {
+          await sleep(2000);
+
+          const statusResponse = await fetch(
+            `/get-task-status/${sessionId}/${taskId}`
+          );
+          const statusData = await statusResponse.json();
+          const task = statusData.data;
+
+          if (!task) {
+            throw new Error("Task status check failed");
+          }
+
+          switch (task.status) {
+            case "queued":
+            case "running":
+              console.log("Task is running...");
+              loadingMessage.textContent = "Thinking...";
+              break;
+
+            case "requires_action":
+              console.log("Task requires action:", task.toolCalls);
+              loadingMessage.textContent = "Running tools...";
+              await handleToolCalls(sessionId, taskId, task.toolCalls);
+              break;
+
+            case "completed":
+              console.log("Task completed");
+              taskComplete = true;
+              const messagesResponse = await fetch(
+                `/get-session-messages/${sessionId}`
+              );
+              const messagesData = await messagesResponse.json();
+              const aiReply = messagesData.data[0]?.content;
+              loadingMessage.classList.remove("loading");
+              loadingMessage.classList.add("ai");
+              loadingMessage.textContent =
+                aiReply || "I don't have a response for that.";
+              break;
+
+            case "failed":
+            case "cancelled":
+              console.error("Task failed:", task); // Log the whole task object
+              const errorDetails =
+                task.lastError?.message ||
+                task.lastError ||
+                `Task ${task.status}`;
+              throw new Error(errorDetails);
+
+            default:
+              throw new Error(`Unknown task status: ${task.status}`);
+          }
+        }
+      }
+
+      // 4. Handle Tool Calls (Unchanged)
+      async function handleToolCalls(sessionId, taskId, toolCalls) {
+        let toolOutputs = [];
+
+        for (const call of toolCalls) {
+          const toolName = call.functionName;
+          // Arguments are now guaranteed to be JSON objects, not strings
+          const toolArgs = call.arguments;
+          let output;
+
+          console.log(`Calling tool: ${toolName} with args:`, toolArgs);
+
+          if (toolName === "detectEmergency") {
+            const toolRes = await fetch("/detect-emergency", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(toolArgs),
+            });
+            output = await toolRes.json();
+          } else if (toolName === "findNearByHospitals") {
+            const toolRes = await fetch("/find-hospitals", {
+              // <-- Make sure this matches your index.ts
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(toolArgs),
+            });
+            output = await toolRes.json();
+          } else {
+            console.warn(`Unknown tool: ${toolName}`);
+            output = { error: `Unknown tool ${toolName}` };
+          }
+
+          toolOutputs.push({
+            toolCallId: call.toolCallId,
+            output: JSON.stringify(output),
+          });
+        }
+
+        await fetch("/submit-tool-outputs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: sessionId,
+            taskId: taskId,
+            toolOutputs: toolOutputs,
+          }),
+        });
+      }
+
+      // --- Event Listeners ---
+      document.addEventListener("DOMContentLoaded", () => {
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+        initializeChat();
+      });
+      sendButton.addEventListener("click", handleSendMessage);
+      chatInput.addEventListener("keyup", (event) => {
+        if (event.key === "Enter") {
+          handleSendMessage();
+        }
+      });
+    </script>
+  </body>
+</html>
