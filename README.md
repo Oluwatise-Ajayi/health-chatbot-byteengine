@@ -1,294 +1,202 @@
 # Health Checker API
 
-## Overview
-This is a backend service built with Node.js and Express using TypeScript. It functions as an AI-driven health assistant by integrating with the Boolbyte Engine for session management, task processing, and interaction with a FHIR data store, as well as the Google Maps API for location-based services.
+An intelligent, AI-powered health assistant backend built with Node.js, Express, and TypeScript. This service provides a conversational interface for health-related queries, capable of detecting emergencies and locating nearby medical facilities.
 
-## Features
-- **Express**: Provides a robust framework for building the RESTful API endpoints.
-- **Boolbyte Engine SDK**: Manages AI sessions, task creation, and interaction with external AI models and tools.
-- **Axios**: Used for making HTTP requests to third-party services like the Google Maps API.
-- **FHIR Client**: Integrates with a FHIR data store for health record management (initialization shown).
+---
 
-## Getting Started
-### Installation
-1.  **Clone the repository**
-    ```bash
-    git clone <repository-url>
-    cd health-checker
-    ```
-2.  **Install dependencies**
-    ```bash
-    npm install
-    ```
-3.  **Create an environment file**
-    Create a `.env` file in the root of the project and add the necessary environment variables.
-    ```bash
-    touch .env
-    ```
-4.  **Run the development server**
-    ```bash
-    npm run dev
-    ```
-    The server will be running at `http://localhost:3000`.
+### ✨ Features
 
-### Environment Variables
-All required environment variables must be set in a `.env` file.
+- **AI Session Management**: Creates and maintains distinct chat sessions for each user.
+- **Intelligent Tool Integration**: Leverages an AI model that can dynamically use tools for specific tasks like emergency detection or hospital lookups.
+- **Emergency Detection**: Scans user messages for keywords indicating a potential medical emergency.
+- **Nearby Hospital Locator**: Finds local hospitals and clinics using the OpenStreetMap Nominatim API.
+- **Asynchronous Task Handling**: Manages AI processing through a non-blocking, poll-based task system.
 
-```ini
+---
+
+### 🛠️ Technologies Used
+
+| Technology | Description |
+| :--- | :--- |
+| [**Node.js**](https://nodejs.org/) | JavaScript runtime for building the server. |
+| [**Express.js**](https://expressjs.com/) | Fast, unopinionated, minimalist web framework for Node.js. |
+| [**TypeScript**](https://www.typescriptlang.org/) | Statically typed superset of JavaScript for robust code. |
+| [**Boolbyte Engine**](https://www.boolbyte.com/) | The AI engine service powering the conversational logic and tool usage. |
+| [**Axios**](https://axios-http.com/) | Promise-based HTTP client for making requests to external APIs. |
+| [**Dotenv**](https://github.com/motdotla/dotenv) | A zero-dependency module that loads environment variables from a `.env` file. |
+
+---
+
+### 🚀 Getting Started
+
+Follow these instructions to get the project up and running on your local machine.
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/Oluwatise-Ajayi/health-chatbot-byteengine.git
+cd health-chatbot-byteengine
+```
+
+#### 2. Install Dependencies
+Install the required npm packages.
+```bash
+npm install
+```
+
+#### 3. Set Up Environment Variables
+Create a `.env` file in the root of the project and add the following variables.
+
+```env
 # Boolbyte Engine Configuration
 BYTEENGINE_BASE_URL=https://api.boolbyte.com
-BYTEENGINE_API_KEY=your_byteengine_api_key
+BYTEENGINE_API_KEY=your_boolbyte_api_key
 
-# FHIR Store Configuration
-FHIR_BASE_URL=https://your-fhir-server-url.com/fhir
+# FHIR Store (Optional, for future data integration)
+FHIR_BASE_URL=your_fhir_base_url
 FHIR_ACCESS_TOKEN=your_fhir_access_token
 FHIR_STORE_ID=your_fhir_store_id
 
-# Google Maps API Key
-GOOGLE_MAPS_API_KEY=your_google_maps_api_key
-
-# Server Port (Optional)
+# Server Port
 PORT=3000
 ```
 
-## API Documentation
-### Base URL
-`http://localhost:3000`
-
-### Endpoints
-#### POST /create-session
-Creates a new AI session.
-
-**Request**:
-```json
-{
-  "metadata": {
-    "userID": "some-user-id"
-  }
-}
+#### 4. Run the Server
+Start the development server with hot-reloading.
+```bash
+npm run dev
 ```
+The server will be running at `http://localhost:3000`.
 
-**Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "id": "c13a0c5c-3f9e-4b4d-9c3f-4e6f7b1b1e8e",
-    "createdAt": "2023-10-27T12:00:00.000Z",
-    "updatedAt": "2023-10-27T12:00:00.000Z",
-    "workerId": "bed83d83-689e-484b-ab32-9a9894591639",
+---
+
+### ⚙️ API Usage
+
+The API provides endpoints to manage chat sessions and process user messages.
+
+**Base URL**: `http://localhost:3000`
+
+#### Create a New Chat Session
+- **Endpoint**: `POST /create-session`
+- **Description**: Initializes a new chat session with the AI worker.
+- **Request Body**:
+  ```json
+  {
     "metadata": {
-      "userID": "some-user-id"
+      "userID": "user-123"
     }
   }
-}
-```
-
-**Errors**:
-- `500 Internal Server Error`: The session could not be created.
-
-#### POST /send-and-process
-Adds a user's message to a session and creates a task for the AI to process it.
-
-**Request**:
-```json
-{
-  "sessionId": "c13a0c5c-3f9e-4b4d-9c3f-4e6f7b1b1e8e",
-  "message": "I have chest pain, can you find hospitals near Ikeja?"
-}
-```
-
-**Response**:
-```json
-{
+  ```
+- **Success Response**:
+  ```json
+  {
     "success": true,
     "data": {
-        "id": "d4a5b810-7e6d-4c3a-8b2f-9d3e5f6g7h8i",
-        "status": "pending",
-        "createdAt": "2023-10-27T12:01:00.000Z",
-        "updatedAt": "2023-10-27T12:01:00.000Z",
-        "sessionId": "c13a0c5c-3f9e-4b4d-9c3f-4e6f7b1b1e8e",
-        "step": null
+      "id": "clztz17s6000108l421g4f9e1",
+      "createdAt": "2024-09-06T14:30:00.000Z",
+      "updatedAt": "2024-09-06T14:30:00.000Z",
+      "workerId": "bed83d83-689e-484b-ab32-9a9894591639",
+      "metadata": {
+        "userID": "user-123"
+      }
     }
-}
-```
+  }
+  ```
 
-**Errors**:
-- `400 Bad Request`: `sessionId` or `message` is missing from the request body.
-- `500 Internal Server Error`: The message could not be processed.
-
-#### GET /get-task-status/:sessionId/:taskId
-Retrieves the status and result of a specific task.
-
-**Request**:
-- Path Parameters:
-    - `sessionId`: `c13a0c5c-3f9e-4b4d-9c3f-4e6f7b1b1e8e`
-    - `taskId`: `d4a5b810-7e6d-4c3a-8b2f-9d3e5f6g7h8i`
-
-**Response**:
-```json
-{
+#### Send a Message and Create a Task
+- **Endpoint**: `POST /send-and-process`
+- **Description**: Sends a user message to a session and creates a task for the AI to process it. The response contains the task ID, which can be used to poll for the result.
+- **Request Body**:
+  ```json
+  {
+    "sessionId": "clztz17s6000108l421g4f9e1",
+    "message": "Find hospitals near Ikeja, Lagos"
+  }
+  ```
+- **Success Response**:
+  ```json
+  {
     "success": true,
     "data": {
-        "id": "d4a5b810-7e6d-4c3a-8b2f-9d3e5f6g7h8i",
-        "status": "requires_action",
-        "createdAt": "2023-10-27T12:01:00.000Z",
-        "updatedAt": "2023-10-27T12:01:05.000Z",
-        "sessionId": "c13a0c5c-3f9e-4b4d-9c3f-4e6f7b1b1e8e",
-        "step": {
-            "type": "tool_calls",
-            "toolCalls": [
-                {
-                    "id": "tool_call_1",
-                    "type": "function",
-                    "function": {
-                        "name": "detectEmergency",
-                        "arguments": "{\"message\":\"I have chest pain...\"}"
-                    }
-                }
-            ]
-        }
+      "id": "clztz29b7000308l430hge9f2",
+      "status": "in_progress",
+      "createdAt": "2024-09-06T14:32:00.000Z",
+      // ... other task details
     }
-}
-```
+  }
+  ```
 
-**Errors**:
-- `500 Internal Server Error`: The task status could not be retrieved.
-
-#### POST /submit-tool-outputs
-Submits the results from tool calls back to a task for further processing.
-
-**Request**:
-```json
-{
-  "sessionId": "c13a0c5c-3f9e-4b4d-9c3f-4e6f7b1b1e8e",
-  "taskId": "d4a5b810-7e6d-4c3a-8b2f-9d3e5f6g7h8i",
-  "toolOutputs": [
-    {
-      "toolCallId": "tool_call_1",
-      "output": "{\"isEmergency\":true}"
-    }
-  ]
-}
-```
-
-**Response**:
-```json
-{
+#### Get Task Status
+- **Endpoint**: `GET /get-task-status/:sessionId/:taskId`
+- **Description**: Poll this endpoint to check the status of a task. The status will eventually change to `requires_action` (if a tool needs to be run) or `completed`.
+- **URL Parameters**:
+  - `sessionId`: `clztz17s6000108l421g4f9e1`
+  - `taskId`: `clztz29b7000308l430hge9f2`
+- **Success Response (`completed`)**:
+  ```json
+  {
     "success": true,
     "data": {
-        "id": "d4a5b810-7e6d-4c3a-8b2f-9d3e5f6g7h8i",
-        "status": "pending",
-        "createdAt": "2023-10-27T12:01:00.000Z",
-        "updatedAt": "2023-10-27T12:02:00.000Z",
-        "sessionId": "c13a0c5c-3f9e-4b4d-9c3f-4e6f7b1b1e8e",
-        "step": null
+      "id": "clztz29b7000308l430hge9f2",
+      "status": "completed",
+      // ... other task details
     }
-}
-```
+  }
+  ```
 
-**Errors**:
-- `400 Bad Request`: `sessionId`, `taskId`, or `toolOutputs` are missing.
-- `500 Internal Server Error`: The tool outputs could not be submitted.
-
-#### GET /get-session-messages/:sessionId
-Lists all messages associated with a session.
-
-**Request**:
-- Path Parameters:
-    - `sessionId`: `c13a0c5c-3f9e-4b4d-9c3f-4e6f7b1b1e8e`
-
-**Response**:
-```json
-{
+#### List Session Messages
+- **Endpoint**: `GET /get-session-messages/:sessionId`
+- **Description**: Retrieves the full message history for a given session.
+- **URL Parameters**:
+  - `sessionId`: `clztz17s6000108l421g4f9e1`
+- **Success Response**:
+  ```json
+  {
     "success": true,
     "data": [
-        {
-            "id": "msg_1",
-            "role": "user",
-            "content": "I have chest pain, can you find hospitals near Ikeja?",
-            "createdAt": "2023-10-27T12:01:00.000Z"
-        },
-        {
-            "id": "msg_2",
-            "role": "assistant",
-            "content": "It sounds like you're experiencing a medical emergency. Please seek immediate medical attention. I have found the following hospitals near Ikeja...",
-            "createdAt": "2023-10-27T12:03:00.000Z"
-        }
+      {
+        "role": "user",
+        "content": "Find hospitals near Ikeja, Lagos"
+      },
+      {
+        "role": "assistant",
+        "content": "I found 3 healthcare facilities near Ikeja, Lagos..."
+      }
     ]
-}
-```
+  }
+  ```
 
-**Errors**:
-- `500 Internal Server Error`: Messages could not be retrieved.
+---
 
-#### POST /detect-emergency
-A secure tool endpoint to detect if a user message indicates an emergency.
+### 🙌 Contributing
 
-**Request**:
-```json
-{
-  "message": "I'm having severe chest pain and can't breathe."
-}
-```
+Contributions are welcome! If you have suggestions for improving the project, please feel free to contribute.
 
-**Response**:
-```json
-{
-  "isEmergency": true
-}
-```
+-   Fork the repository.
+-   Create a new branch (`git checkout -b feature/YourFeatureName`).
+-   Make your changes and commit them (`git commit -m 'Add some feature'`).
+-   Push to the branch (`git push origin feature/YourFeatureName`).
+-   Open a pull request.
 
-**Errors**:
-- None explicitly defined, relies on server availability.
+---
 
-#### POST /find-hospitals
-A secure tool endpoint to find nearby hospitals using the Google Maps API.
+### 📄 License
 
-**Request**:
-```json
-{
-  "location": "Ikeja, Lagos"
-}
-```
+This project is licensed under the ISC License.
 
-**Response**:
-```json
-{
-    "hospitals": [
-        {
-            "name": "Lagoon Hospitals",
-            "address": "123 Obafemi Awolowo Way, Ikeja, Lagos",
-            "rating": 4.5
-        },
-        {
-            "name": "Reddington Hospital",
-            "address": "456 Isaac John St, Ikeja GRA, Ikeja",
-            "rating": 4.2
-        }
-    ]
-}
-```
+---
 
-**Errors**:
-- `500 Internal Server Error`: Server is misconfigured (missing `GOOGLE_MAPS_API_KEY`) or there was an error calling the Google Maps API.
+### 👨‍💻 Author
 
-#### POST /create-patient
-Endpoint to create a patient record in the FHIR store. Note: The implementation is not provided in the source code.
+Connect with me on social media!
 
-**Request**:
-```json
-{
-  "name": "John Doe",
-  "birthDate": "1990-01-15",
-  "gender": "male"
-}
-```
+- **LinkedIn**: [Your LinkedIn Profile](https://linkedin.com/in/your_username)
+- **Twitter / X**: [@your_handle](https://twitter.com/your_handle)
 
-**Response**:
-(Implementation dependent)
+---
 
-**Errors**:
-(Implementation dependent)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![NPM](https://img.shields.io/badge/NPM-CB3837?style=for-the-badge&logo=npm&logoColor=white)
 
 [![Readme was generated by Dokugen](https://img.shields.io/badge/Readme%20was%20generated%20by-Dokugen-brightgreen)](https://www.npmjs.com/package/dokugen)

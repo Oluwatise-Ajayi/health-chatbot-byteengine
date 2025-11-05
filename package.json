@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon -e ts,json --exec \"node --loader ts-node/esm ./index.ts\"",
+    "dev": "nodemon --exec \"node --loader ts-node/esm ./index.ts\"",
     "build": "tsc",
     "start": "node ./dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,7 +18,8 @@
     "axios": "^1.12.2",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "rimraf": "^6.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",

@@ -3,124 +3,443 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Health Checker</title>
+    <title>MediMate - Your AI Health Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      /* (Your existing CSS is great, no changes) */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
-        background-color: #f4f7f6;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        color: #333;
+      }
+
+      /* Navbar */
+      .navbar {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .logo {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      .brand-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: #666;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+        font-size: 0.95rem;
+      }
+
+      .nav-link:hover {
+        color: #667eea;
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #f0fdf4;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #166534;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      /* Main Container */
+      .main-container {
+        flex: 1;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        margin: 0;
+        padding: 2rem;
       }
+
       #chat-container {
-        width: 400px;
-        max-width: 90%;
+        width: 100%;
+        max-width: 800px;
         height: 600px;
-        border: 1px solid #d1d1d1;
-        border-radius: 8px;
-        background-color: #fff;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         display: flex;
         flex-direction: column;
+        overflow: hidden;
       }
-      #chat-window {
-        flex-grow: 1;
-        padding: 16px;
-        overflow-y: auto;
-        border-bottom: 1px solid #eee;
-      }
-      .message {
-        margin-bottom: 12px;
-        padding: 8px 12px;
-        border-radius: 18px;
-        max-width: 75%;
-        line-height: 1.4;
-        white-space: pre-wrap; /* Added to respect newlines from AI */
-      }
-      .message.user {
-        background-color: #007aff;
+
+      /* Chat Header */
+      .chat-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1.5rem;
         color: white;
-        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .chat-header-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+
+      .chat-header-text h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .chat-header-text p {
+        font-size: 0.85rem;
+        opacity: 0.9;
+      }
+
+      /* Chat Window */
+      #chat-window {
+        flex: 1;
+        padding: 2rem;
+        overflow-y: auto;
+        background: #f9fafb;
+      }
+
+      #chat-window::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      #chat-window::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      #chat-window::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      #chat-window::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      .message {
+        margin-bottom: 1.5rem;
+        display: flex;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.user {
+        justify-content: flex-end;
+      }
+
+      .message-content {
+        max-width: 75%;
+        padding: 1rem 1.25rem;
+        border-radius: 18px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .message.user .message-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
         border-bottom-right-radius: 4px;
       }
-      .message.ai {
-        background-color: #e5e5ea;
-        color: black;
-        margin-right: auto;
+
+      .message.ai .message-content {
+        background: white;
+        color: #333;
+        border: 1px solid #e5e7eb;
         border-bottom-left-radius: 4px;
       }
-      .message.loading {
-        background-color: #e5e5ea;
-        color: #777;
+
+      .message.loading .message-content {
+        background: white;
+        color: #666;
         font-style: italic;
-        margin-right: auto;
-        border-bottom-left-radius: 4px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
+
+      .typing-indicator {
+        display: flex;
+        gap: 4px;
+      }
+
+      .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        background: #667eea;
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+      }
+
+      .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes typing {
+        0%, 60%, 100% {
+          transform: translateY(0);
+        }
+        30% {
+          transform: translateY(-10px);
+        }
+      }
+
+      /* Input Area */
       #chat-input-area {
         display: flex;
-        padding: 16px;
+        padding: 1.5rem;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        gap: 1rem;
       }
+
       #chat-input {
-        flex-grow: 1;
-        border: 1px solid #ccc;
-        border-radius: 18px;
-        padding: 10px 16px;
-        font-size: 16px;
+        flex: 1;
+        border: 2px solid #e5e7eb;
+        border-radius: 24px;
+        padding: 0.875rem 1.25rem;
+        font-size: 0.95rem;
         outline: none;
+        transition: all 0.3s;
+        font-family: inherit;
       }
+
       #chat-input:focus {
-        border-color: #007aff;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
       }
+
       #send-button {
-        margin-left: 8px;
+        width: 48px;
+        height: 48px;
         border: none;
-        background-color: #007aff;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
+        font-size: 20px;
         cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      #send-button:hover:not(:disabled) {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+      }
+
+      #send-button:active:not(:disabled) {
+        transform: scale(0.95);
+      }
+
+      #send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* Footer */
+      .footer {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 1rem;
+        text-align: center;
+        color: white;
+        font-size: 0.85rem;
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .navbar {
+          padding: 1rem;
+        }
+
+        .nav-links {
+          display: none;
+        }
+
+        .brand-name {
+          font-size: 1.25rem;
+        }
+
+        .main-container {
+          padding: 1rem;
+        }
+
+        #chat-container {
+          height: calc(100vh - 180px);
+          border-radius: 16px;
+        }
+
+        .message-content {
+          max-width: 85%;
+        }
       }
     </style>
   </head>
   <body>
-    <div id="chat-container">
-      <div id="chat-window"></div>
-      <div id="chat-input-area">
-        <input type="text" id="chat-input" placeholder="Type a message..." />
-        <button id="send-button">→</button>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="logo-container">
+        <div class="logo">🏥</div>
+        <span class="brand-name">MediMate</span>
+      </div>
+      <div class="nav-links">
+        <a href="#" class="nav-link">Home</a>
+        <a href="#" class="nav-link">About</a>
+        <a href="#" class="nav-link">Contact</a>
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span>Online</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Chat Container -->
+    <div class="main-container">
+      <div id="chat-container">
+        <!-- Chat Header -->
+        <div class="chat-header">
+          <div class="chat-header-icon">🤖</div>
+          <div class="chat-header-text">
+            <h2>AI Health Assistant</h2>
+            <p>Available 24/7 to help with your health questions</p>
+          </div>
+        </div>
+
+        <!-- Chat Window -->
+        <div id="chat-window"></div>
+
+        <!-- Input Area -->
+        <div id="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Ask me about symptoms, find hospitals, or get health advice..." />
+          <button id="send-button" aria-label="Send message">
+            <span>➤</span>
+          </button>
+        </div>
       </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+      <p>⚠️ MediMate is not a substitute for professional medical advice. Always consult with a healthcare provider.</p>
+    </footer>
+
     <script>
-      // --- STATE ---
       let sessionId = null;
 
-      // --- DOM Elements ---
       const chatWindow = document.getElementById("chat-window");
       const chatInput = document.getElementById("chat-input");
       const sendButton = document.getElementById("send-button");
 
-      // --- Helper Functions ---
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
       function addMessage(role, text) {
         const messageDiv = document.createElement("div");
         messageDiv.classList.add("message", role);
-        messageDiv.textContent = text;
+        
+        const contentDiv = document.createElement("div");
+        contentDiv.classList.add("message-content");
+        
+        if (role === "loading") {
+          contentDiv.innerHTML = `
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          `;
+        } else {
+          contentDiv.textContent = text;
+        }
+        
+        messageDiv.appendChild(contentDiv);
         chatWindow.appendChild(messageDiv);
         chatWindow.scrollTop = chatWindow.scrollHeight;
-        return messageDiv;
+        return contentDiv;
       }
 
-      // --- Main Chat Logic ---
-
-      // 1. Initialize the Chat
       async function initializeChat() {
         try {
           const response = await fetch("/create-session", {
@@ -135,23 +454,22 @@
             sessionId = data.data.id;
             addMessage(
               "ai",
-              "Hi there! I am your AI health assistant. How can I help you today?"
+              "Hi there! I'm MediMate, your AI health assistant. 👋\n\nI can help you with:\n• Finding nearby hospitals and clinics\n• Answering health questions\n• Providing general health guidance\n\nHow can I assist you today?"
             );
             chatInput.disabled = false;
             sendButton.disabled = false;
           } else {
             addMessage(
               "ai",
-              "Error: Could not start a session. Please refresh."
+              "Sorry, I couldn't start a session. Please refresh the page and try again."
             );
           }
         } catch (error) {
           console.error("Session creation failed:", error);
-          addMessage("ai", "Error: Server connection failed. Please refresh.");
+          addMessage("ai", "Connection error. Please check your internet and refresh the page.");
         }
       }
 
-      // 2. Send a Message (NEW FLOW)
       async function handleSendMessage() {
         const message = chatInput.value.trim();
         if (!message || !sessionId) return;
@@ -160,23 +478,19 @@
         chatInput.value = "";
         chatInput.disabled = true;
         sendButton.disabled = true;
-        const loadingMessage = addMessage("loading", "...");
+        const loadingMessage = addMessage("loading", "");
 
         try {
-          // Step 1: Send message and create task (NEW ENDPOINT)
           const taskResponse = await fetch("/send-and-process", {
-            // <-- THIS IS THE CHANGE
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ sessionId: sessionId, message: message }),
           });
 
-          // --- NEW ERROR HANDLING ---
           if (!taskResponse.ok) {
             const errorData = await taskResponse.json();
             throw new Error(errorData.message || "Failed to send message");
           }
-          // --- END NEW ERROR HANDLING ---
 
           const taskData = await taskResponse.json();
           if (!taskData.data || !taskData.data.id) {
@@ -184,14 +498,12 @@
           }
           const taskId = taskData.data.id;
 
-          // Step 2: Poll for the task result (this is unchanged)
           await pollForResult(sessionId, taskId, loadingMessage);
         } catch (error) {
           console.error("Chat error:", error);
-          loadingMessage.classList.remove("loading");
-          loadingMessage.classList.add("ai");
-          // This will now show the REAL error
-          loadingMessage.textContent = `Error: ${error.message}`;
+          loadingMessage.parentElement.classList.remove("loading");
+          loadingMessage.parentElement.classList.add("ai");
+          loadingMessage.innerHTML = `<div style="color: #dc2626;">Error: ${error.message}</div>`;
         }
 
         chatInput.disabled = false;
@@ -199,7 +511,6 @@
         chatInput.focus();
       }
 
-      // 3. Polling Function (Unchanged, but error logging improved)
       async function pollForResult(sessionId, taskId, loadingMessage) {
         let taskComplete = false;
 
@@ -212,6 +523,8 @@
           const statusData = await statusResponse.json();
           const task = statusData.data;
 
+          console.log("📦 Task status:", task.status);
+
           if (!task) {
             throw new Error("Task status check failed");
           }
@@ -219,36 +532,47 @@
           switch (task.status) {
             case "queued":
             case "running":
-              console.log("Task is running...");
-              loadingMessage.textContent = "Thinking...";
+              console.log("⏳ Task is running...");
               break;
 
             case "requires_action":
-              console.log("Task requires action:", task.toolCalls);
-              loadingMessage.textContent = "Running tools...";
-              await handleToolCalls(sessionId, taskId, task.toolCalls);
+              console.log("🔧 Task requires action");
+              
+              const toolCalls = extractToolCalls(task);
+              
+              if (!toolCalls || toolCalls.length === 0) {
+                console.error("❌ No tool calls found in task.state.messages");
+                throw new Error("Task requires action but no tool calls found");
+              }
+
+              console.log("🔧 Found tool calls:", toolCalls);
+              await handleToolCalls(sessionId, taskId, toolCalls);
+              
+              console.log("🔄 Continuing to poll after tool submission...");
               break;
 
             case "completed":
-              console.log("Task completed");
+              console.log("✅ Task completed");
               taskComplete = true;
               const messagesResponse = await fetch(
                 `/get-session-messages/${sessionId}`
               );
               const messagesData = await messagesResponse.json();
               const aiReply = messagesData.data[0]?.content;
-              loadingMessage.classList.remove("loading");
-              loadingMessage.classList.add("ai");
-              loadingMessage.textContent =
-                aiReply || "I don't have a response for that.";
+              
+              loadingMessage.parentElement.classList.remove("loading");
+              loadingMessage.parentElement.classList.add("ai");
+              loadingMessage.textContent = aiReply || "I don't have a response for that.";
               break;
 
             case "failed":
             case "cancelled":
-              console.error("Task failed:", task); // Log the whole task object
+              console.error("❌ Task failed:", task);
               const errorDetails =
                 task.lastError?.message ||
+                task.last_error?.message ||
                 task.lastError ||
+                task.last_error ||
                 `Task ${task.status}`;
               throw new Error(errorDetails);
 
@@ -258,45 +582,66 @@
         }
       }
 
-      // 4. Handle Tool Calls (Unchanged)
+      function extractToolCalls(task) {
+        if (!task.state || !task.state.messages) {
+          return null;
+        }
+
+        const messages = task.state.messages;
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const msg = messages[i];
+          
+          if (msg.kwargs && msg.kwargs.tool_calls && msg.kwargs.tool_calls.length > 0) {
+            console.log("✅ Found tool_calls in message:", msg.kwargs.tool_calls);
+            return msg.kwargs.tool_calls;
+          }
+        }
+
+        return null;
+      }
+
       async function handleToolCalls(sessionId, taskId, toolCalls) {
         let toolOutputs = [];
 
         for (const call of toolCalls) {
-          const toolName = call.functionName;
-          // Arguments are now guaranteed to be JSON objects, not strings
-          const toolArgs = call.arguments;
+          const toolCallId = call.id;
+          const functionName = call.name;
+          const functionArgs = call.args;
+
+          console.log(`🔧 Calling tool: ${functionName}`);
+          console.log(`📝 Arguments:`, functionArgs);
+
           let output;
 
-          console.log(`Calling tool: ${toolName} with args:`, toolArgs);
-
-          if (toolName === "detectEmergency") {
+          if (functionName === "detectEmergency") {
             const toolRes = await fetch("/detect-emergency", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(toolArgs),
+              body: JSON.stringify(functionArgs),
             });
             output = await toolRes.json();
-          } else if (toolName === "findNearByHospitals") {
+          } else if (functionName === "findNearByHospitals") {
             const toolRes = await fetch("/find-hospitals", {
-              // <-- Make sure this matches your index.ts
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(toolArgs),
+              body: JSON.stringify(functionArgs),
             });
             output = await toolRes.json();
+            console.log(`🏥 Hospital tool output:`, output);
           } else {
-            console.warn(`Unknown tool: ${toolName}`);
-            output = { error: `Unknown tool ${toolName}` };
+            console.warn(`⚠️ Unknown tool: ${functionName}`);
+            output = { error: `Unknown tool ${functionName}` };
           }
 
           toolOutputs.push({
-            toolCallId: call.toolCallId,
+            toolCallId: toolCallId,
             output: JSON.stringify(output),
           });
         }
 
-        await fetch("/submit-tool-outputs", {
+        console.log(`📤 Submitting ${toolOutputs.length} tool outputs`);
+
+        const submitResponse = await fetch("/submit-tool-outputs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -305,15 +650,23 @@
             toolOutputs: toolOutputs,
           }),
         });
+
+        if (!submitResponse.ok) {
+          const errorData = await submitResponse.json();
+          throw new Error(`Failed to submit tool outputs: ${errorData.message}`);
+        }
+
+        console.log("✅ Tool outputs submitted successfully");
       }
 
-      // --- Event Listeners ---
       document.addEventListener("DOMContentLoaded", () => {
         chatInput.disabled = true;
         sendButton.disabled = true;
         initializeChat();
       });
+      
       sendButton.addEventListener("click", handleSendMessage);
+      
       chatInput.addEventListener("keyup", (event) => {
         if (event.key === "Enter") {
           handleSendMessage();
